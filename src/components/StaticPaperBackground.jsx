@@ -1,7 +1,6 @@
-import { useEffect, useRef, useMemo } from "react";
-import { useThree } from "@react-three/fiber";
+import { useRef, useMemo } from "react";
+import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import gsap from "gsap";
 
 const vertexShader = `
   varying vec2 vUv;
@@ -14,7 +13,6 @@ const vertexShader = `
 const fragmentShader = `
   uniform float uTime;
   uniform vec3 uColor;
-  uniform float uProgress;
   uniform vec2 uResolution;
   
   varying vec2 vUv;
@@ -67,10 +65,8 @@ const fragmentShader = `
 
   void main() {
     vec2 uv = vUv;
-    float aspect = uResolution.x / uResolution.y;
-    vec2 aspectUV = vec2(uv.x * aspect, uv.y);
 
-    // === 종이 질감 생성 ===
+    // === TransitionOverlay와 똑같은 종이 질감 생성 ===
     vec3 paperColor = uColor;
     
     // 1. 큰 얼룩
@@ -85,26 +81,18 @@ const fragmentShader = `
     // 4. 그레인
     float grain = random(uv * 1000.0 + uTime * 0.1) * 0.03;
     
-    // 색상 조합
+    // 색상 조합 (TransitionOverlay와 동일)
     vec3 color = paperColor;
     color = mix(color, vec3(0.88, 0.82, 0.70), largeNoise * 0.15);
     color = mix(color, vec3(0.82, 0.75, 0.62), mediumNoise * 0.1);
     color += (smallNoise - 0.5) * 0.03;
     color += grain;
 
-    // === Dissolve 효과 (잉크 번짐) ===
-    float dissolveNoise = fbm(aspectUV * 4.0 + uTime * 0.1, 4) * 0.5 + 0.5;
-    
-    float edgeWidth = 0.15; // 더 부드러운 경계
-    float mappedProgress = uProgress * (1.0 + edgeWidth * 2.0) - edgeWidth;
-    float alpha = smoothstep(mappedProgress - edgeWidth, mappedProgress, dissolveNoise);
-    float finalAlpha = 1.0 - alpha;
-
-    gl_FragColor = vec4(color, finalAlpha);
+    gl_FragColor = vec4(color, 1.0);
   }
 `;
 
-const TransitionPlane = ({ trigger, color = "#f5ebd7" }) => {
+const StaticPaperBackground = ({ color = "#f5ebd7" }) => {
   const materialRef = useRef(null);
   const { viewport, size } = useThree();
 
@@ -112,62 +100,32 @@ const TransitionPlane = ({ trigger, color = "#f5ebd7" }) => {
     () => ({
       uTime: { value: 0 },
       uColor: { value: new THREE.Color(color) },
-      uProgress: { value: 0.0 },
       uResolution: { value: new THREE.Vector2(size.width, size.height) },
     }),
     [color, size.width, size.height]
   );
 
-  useEffect(() => {
+  // 미세한 애니메이션 (선택사항 - 원하지 않으면 주석 처리)
+  useFrame((state) => {
     if (materialRef.current) {
-      materialRef.current.uniforms.uResolution.value.set(
-        size.width,
-        size.height
-      );
+      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime * 0.1;
     }
-  }, [size]);
-
-  useEffect(() => {
-    if (!trigger) return;
-
-    const material = materialRef.current;
-    if (!material) return;
-
-    const tl = gsap.timeline();
-
-    tl.to(material.uniforms.uProgress, {
-      value: 1,
-      duration: 2.5,
-      ease: "power2.inOut",
-    })
-      .to(material.uniforms.uProgress, {
-        value: 1,
-        duration: 0.2,
-      })
-      .to(material.uniforms.uProgress, {
-        value: 0,
-        duration: 2.5,
-        ease: "power2.inOut",
-        onComplete: () => {
-          material.uniforms.uProgress.value = 0;
-        },
-      });
-  }, [trigger]);
+  });
 
   return (
-    <mesh position={[0, 0, 0]} renderOrder={999}>
-      <planeGeometry args={[viewport.width, viewport.height]} />
+    <mesh position={[0, 0, -5]} renderOrder={-999}>
+      <planeGeometry args={[viewport.width * 2, viewport.height * 2]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
         uniforms={uniforms}
-        transparent={true}
         depthTest={false}
         depthWrite={false}
+        side={THREE.DoubleSide}
       />
     </mesh>
   );
 };
 
-export default TransitionPlane;
+export default StaticPaperBackground;
