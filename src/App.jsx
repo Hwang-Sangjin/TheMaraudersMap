@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import CanvasBackground from "./components/CanvasBackground";
 import TransitionOverlay from "./components/TransitionOverlay";
 import Header from "./components/Header";
@@ -16,15 +17,17 @@ export default function App() {
 
   const changeSection = (nextSection) => {
     if (transitioning || nextSection === currentSection) return;
+
     setTransitioning(true);
     setTrigger((prev) => prev + 1);
+
     setTimeout(() => {
       setCurrentSection(nextSection);
       setTransitioning(false);
     }, 2500);
   };
 
-  // section에 따라 body scroll 제어
+  // 스크롤 제어
   useEffect(() => {
     if (["loading", "intro"].includes(currentSection)) {
       document.body.style.overflow = "hidden";
@@ -34,13 +37,16 @@ export default function App() {
   }, [currentSection]);
 
   return (
-    <>
+    <div className="relative cursor-none">
+      {/* 3D Background */}
       <CanvasBackground />
 
+      {/* Header - main 이후 섹션에서만 표시 */}
       {(currentSection === "main" ||
         currentSection === "about" ||
         currentSection === "contact") && <Header onNavigate={changeSection} />}
 
+      {/* Main Section UI */}
       <main className="relative z-20 pt-20 px-4">
         {currentSection === "loading" && (
           <LoadingSection onComplete={() => changeSection("intro")} />
@@ -53,7 +59,8 @@ export default function App() {
         {currentSection === "contact" && <ContactSection />}
       </main>
 
+      {/* Transition Shader Overlay */}
       <TransitionOverlay trigger={trigger} />
-    </>
+    </div>
   );
 }
