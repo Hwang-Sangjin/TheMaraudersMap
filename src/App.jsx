@@ -9,6 +9,7 @@ import IntroSection from "./sections/IntroSection";
 import MainSection from "./sections/MainSection";
 import AboutSection from "./sections/AboutSection";
 import ContactSection from "./sections/ContactSection";
+import CustomCursorLayer from "./components/Cursor/CustomCursorLayer";
 
 export default function App() {
   const [currentSection, setCurrentSection] = useState("loading");
@@ -61,6 +62,8 @@ export default function App() {
 
       {/* Transition Shader Overlay */}
       <TransitionOverlay trigger={trigger} />
+
+      <CustomCursorLayer enabled={!transitioning} />
     </div>
   );
 }
