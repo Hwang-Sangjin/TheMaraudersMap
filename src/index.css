@@ -1,5 +1,15 @@
+@font-face {
+  font-family: Penta;
+  src: url("/fonts/Penta.ttf");
+}
+
 @import "tailwindcss";
+
 html,
 body {
   cursor: none;
+}
+
+@theme {
+  --font-penta: "Penta", "sans-serif";
 }

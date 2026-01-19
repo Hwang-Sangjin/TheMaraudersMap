@@ -102,7 +102,7 @@ const StaticPaperBackground = ({ color = "#f5ebd7" }) => {
       uColor: { value: new THREE.Color(color) },
       uResolution: { value: new THREE.Vector2(size.width, size.height) },
     }),
-    [color, size.width, size.height]
+    [color, size.width, size.height],
   );
 
   // 미세한 애니메이션 (선택사항 - 원하지 않으면 주석 처리)

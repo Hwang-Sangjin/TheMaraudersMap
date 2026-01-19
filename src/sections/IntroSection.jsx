@@ -20,7 +20,7 @@ export default function IntroSection({ onEnter }) {
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col items-center justify-center px-6">
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-center text-gray-800">
+      <h1 className="text-3xl md:text-4xl lg:text-5xl font-penta  mb-6 text-center text-gray-800">
         Welcome to My Portfolio
       </h1>
 
