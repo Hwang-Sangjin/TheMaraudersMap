@@ -10,6 +10,7 @@ import MainSection from "./sections/MainSection";
 import AboutSection from "./sections/AboutSection";
 import ContactSection from "./sections/ContactSection";
 import CustomCursorLayer from "./components/Cursor/CustomCursorLayer";
+import MapBackground from "./components/MapBackground";
 
 export default function App() {
   const [currentSection, setCurrentSection] = useState("loading");
@@ -40,7 +41,7 @@ export default function App() {
   return (
     <div className="relative cursor-none">
       {/* 3D Background */}
-      <CanvasBackground />
+      <CanvasBackground currentSection={currentSection} />
 
       {/* Header - main 이후 섹션에서만 표시 */}
       {(currentSection === "main" ||

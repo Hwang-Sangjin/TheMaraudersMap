@@ -1,8 +1,13 @@
 import { Canvas } from "@react-three/fiber";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import StaticPaperBackground from "./StaticPaperBackground";
+import MapBackground from "./MapBackground";
 
-export default function CanvasBackground() {
+export default function CanvasBackground({ currentSection }) {
+  useEffect(() => {
+    console.log("Current Section in CanvasBackground:", currentSection);
+  }, [currentSection]);
+
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       <Suspense fallback={null}>
@@ -12,6 +17,12 @@ export default function CanvasBackground() {
           gl={{ alpha: false }}
         >
           <StaticPaperBackground color="#f5ebd7" />
+
+          {currentSection === "main" ||
+          currentSection === "about" ||
+          currentSection === "contact" ? (
+            <MapBackground />
+          ) : null}
         </Canvas>
       </Suspense>
     </div>
