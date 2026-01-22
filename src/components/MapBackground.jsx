@@ -7,7 +7,7 @@ const MapBackground = () => {
   const materialRef = useRef();
 
   const ASCII_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const pixelSize = 20;
+  const pixelSize = 15; // 간격 줄이기 (20 -> 15)
 
   // ASCII 텍스처 생성
   useEffect(() => {
@@ -21,11 +21,15 @@ const MapBackground = () => {
     // 배경 투명
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 문자 그리기
+    // 문자 그리기 - font-penta 적용
     ctx.fillStyle = "white";
-    ctx.font = `bold ${CHAR_SIZE - 4}px "Courier New", monospace`;
+    // 'Penta' 폰트 적용 - bold 제거하고 일반 weight 사용
+    ctx.font = `${CHAR_SIZE - 2}px "Penta", "Courier New", monospace`;
     ctx.textBaseline = "middle";
     ctx.textAlign = "center";
+
+    // 글자를 더 얇게 하기 위한 globalAlpha 조절 (선택사항)
+    // ctx.globalAlpha = 0.8;
 
     ASCII_CHARS.split("").forEach((char, i) => {
       ctx.fillText(char, (i + 0.5) * CHAR_SIZE, CHAR_SIZE / 2);
