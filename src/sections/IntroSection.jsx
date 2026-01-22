@@ -66,7 +66,7 @@ export default function IntroSection({ onEnter }) {
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyPress}
         placeholder="Enter your name..."
-        className={`w-80 max-w-full px-4 py-2 mb-4 border-2 rounded focus:outline-none transition-all duration-700 ${
+        className={`w-80 max-w-full px-4 py-2 mb-4 border-2 rounded focus:outline-none font-penta transition-all duration-700 ${
           showInput ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         }`}
         style={{ borderColor: "#6e1b15", color: "#6e1b15" }}
