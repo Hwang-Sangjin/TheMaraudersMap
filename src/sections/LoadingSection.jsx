@@ -91,15 +91,18 @@ export default function LoadingSection({ onComplete }) {
       />
 
       {/* 중앙 로딩 바 */}
-      <div className="absolute left-1/2 top-0 -translate-x-1/2 w-1 h-full overflow-hidden">
+      <div className="absolute left-1/2 top-0 -translate-x-1/2 w-2 h-full overflow-hidden">
         <div
-          className={`w-full bg-gradient-to-b from-gray-800 to-gray-600 transition-opacity duration-300 ${
+          className={`w-full transition-opacity duration-300 ${
             isOpening ? "opacity-0" : "opacity-100"
           }`}
           style={{
-            height: `${fakeProgress}%`, // 테스트용
-            // height: `${progress}%`, // 실제 사용시
-            boxShadow: "0 0 20px rgba(0,0,0,0.5)",
+            height: `${fakeProgress}%`,
+            background: "linear-gradient(to bottom, #6e1b15, #431d2c)",
+            boxShadow:
+              "0 0 10px rgba(110, 27, 21, 0.8), " +
+              "0 0 20px rgba(110, 27, 21, 0.5), " +
+              "0 0 30px rgba(67, 29, 44, 0.3)",
           }}
         />
       </div>

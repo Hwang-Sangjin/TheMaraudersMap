@@ -5,6 +5,7 @@ import TransitionOverlay from "./components/TransitionOverlay";
 import Header from "./components/Header";
 
 import LoadingSection from "./sections/LoadingSection";
+import ImageSection from "./sections/ImageSection"; // 추가
 import IntroSection from "./sections/IntroSection";
 import MainSection from "./sections/MainSection";
 import AboutSection from "./sections/AboutSection";
@@ -31,7 +32,7 @@ export default function App() {
 
   // 스크롤 제어
   useEffect(() => {
-    if (["loading", "intro"].includes(currentSection)) {
+    if (["loading", "image", "intro"].includes(currentSection)) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
@@ -51,7 +52,10 @@ export default function App() {
       {/* Main Section UI */}
       <main className="relative z-20 pt-20 px-4">
         {currentSection === "loading" && (
-          <LoadingSection onComplete={() => changeSection("intro")} />
+          <LoadingSection onComplete={() => changeSection("image")} />
+        )}
+        {currentSection === "image" && (
+          <ImageSection onComplete={() => changeSection("intro")} />
         )}
         {currentSection === "intro" && (
           <IntroSection onEnter={() => changeSection("main")} />

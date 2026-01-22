@@ -5,5 +5,15 @@ import { glsl } from "three/tsl";
 
 // https://vite.dev/config/
 export default defineConfig({
+  theme: {
+    extend: {
+      colors: {
+        marauder: {
+          red: "#6e1b15",
+          purple: "#431d2c",
+        },
+      },
+    },
+  },
   plugins: [react(), tailwindcss(), glsl()],
 });
