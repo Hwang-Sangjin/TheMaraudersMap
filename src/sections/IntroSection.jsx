@@ -69,7 +69,7 @@ export default function IntroSection({ onEnter }) {
         className={`w-80 max-w-full px-4 py-2 mb-4 border-2 rounded focus:outline-none font-penta transition-all duration-700 ${
           showInput ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         }`}
-        style={{ borderColor: "#6e1b15", color: "#6e1b15" }}
+        style={{ borderColor: "#210806", color: "#210806" }}
       />
 
       <button
@@ -77,9 +77,9 @@ export default function IntroSection({ onEnter }) {
         className={`text-white text-base md:text-lg px-6 py-3 rounded transition-all duration-700 ${
           showInput ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         }`}
-        style={{ backgroundColor: "#6e1b15", transitionDelay: "100ms" }}
+        style={{ backgroundColor: "#210806", transitionDelay: "100ms" }}
         onMouseEnter={(e) => (e.target.style.backgroundColor = "#551410")}
-        onMouseLeave={(e) => (e.target.style.backgroundColor = "#6e1b15")}
+        onMouseLeave={(e) => (e.target.style.backgroundColor = "#210806")}
       >
         Enter
       </button>
