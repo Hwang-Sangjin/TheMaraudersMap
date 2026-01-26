@@ -8,7 +8,7 @@ const MapBackground = () => {
 
   const ASCII_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const pixelSize = 15;
-  const headerHeight = 80; // 헤더 높이 (픽셀 단위, 필요시 조정)
+  const headerHeight = 80;
 
   // ASCII 텍스처 생성
   useEffect(() => {
@@ -41,6 +41,26 @@ const MapBackground = () => {
     }
   }, []);
 
+  // 애니메이션 루프
+  useEffect(() => {
+    let animationId;
+    const startTime = Date.now();
+
+    const animate = () => {
+      if (materialRef.current) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        materialRef.current.uniforms.uTime.value = elapsed;
+      }
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId);
+    };
+  }, []);
+
   const shaderMaterial = useMemo(
     () => ({
       uniforms: {
@@ -51,6 +71,8 @@ const MapBackground = () => {
         uAsciiTexture: { value: null },
         uCharCount: { value: ASCII_CHARS.length },
         uHeaderHeight: { value: headerHeight },
+        uTime: { value: 0 },
+        uSpeed: { value: 0.02 }, // 스크롤 속도 조절 (값이 클수록 빠름)
       },
       vertexShader: `
         varying vec2 vUv;
@@ -68,6 +90,8 @@ const MapBackground = () => {
         uniform sampler2D uAsciiTexture;
         uniform float uCharCount;
         uniform float uHeaderHeight;
+        uniform float uTime;
+        uniform float uSpeed;
         varying vec2 vUv;
         
         float random(vec2 st) {
@@ -75,21 +99,30 @@ const MapBackground = () => {
         }
         
         void main() {
-          // 헤더 영역 체크 (상단부터 uHeaderHeight만큼)
+          // 헤더 영역 체크
           float screenY = (1.0 - vUv.y) * uResolution.y;
           
-          // 그라데이션: 맨 위(0) = 완전 투명(0.0), 헤더 끝(uHeaderHeight) = 반투명(0.5)
           float headerOpacity = 1.0;
           if (screenY < uHeaderHeight) {
             headerOpacity = smoothstep(0.0, uHeaderHeight, screenY) * 0.5;
           }
           
           vec2 normalizedPixelSize = vec2(uPixelSize) / uResolution;
-          vec2 uvPixel = normalizedPixelSize * floor(vUv / normalizedPixelSize);
-          vec2 cellUV = fract(vUv / normalizedPixelSize);
-          vec2 cellPosition = floor(vUv / normalizedPixelSize);
           
-          float charIndex = floor(random(cellPosition) * uCharCount);
+          // UV를 시간에 따라 왼쪽으로 이동 (오른쪽에서 왼쪽으로)
+          vec2 scrolledUV = vUv;
+          scrolledUV.x += uTime * uSpeed;
+          
+          // UV를 반복(wrap)하여 무한 스크롤 효과
+          scrolledUV = fract(scrolledUV);
+          
+          vec2 uvPixel = normalizedPixelSize * floor(scrolledUV / normalizedPixelSize);
+          vec2 cellUV = fract(scrolledUV / normalizedPixelSize);
+          vec2 cellPosition = floor(scrolledUV / normalizedPixelSize);
+          
+          // 시간에 따라 변하는 랜덤 시드 추가 (더 다양한 패턴)
+          float timeSeed = floor(uTime * uSpeed);
+          float charIndex = floor(random(cellPosition + vec2(timeSeed, 0.0)) * uCharCount);
           
           vec2 asciiUV = vec2(
             (charIndex + cellUV.x) / uCharCount,
@@ -103,7 +136,7 @@ const MapBackground = () => {
           
           if (character > 0.5) {
             color = uColor2;
-            alpha = 1.0 * headerOpacity; // 헤더 opacity 적용
+            alpha = 1.0 * headerOpacity;
           } else {
             color = uColor1;
             alpha = 0.0;
