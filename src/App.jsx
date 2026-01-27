@@ -52,7 +52,7 @@ export default function App() {
       {/* Main Section UI */}
       <main className="relative z-20 pt-20 px-4">
         {currentSection === "loading" && (
-          <LoadingSection onComplete={() => changeSection("image")} />
+          <LoadingSection onComplete={() => changeSection("main")} /> //image
         )}
         {currentSection === "image" && (
           <ImageSection onComplete={() => changeSection("intro")} />
