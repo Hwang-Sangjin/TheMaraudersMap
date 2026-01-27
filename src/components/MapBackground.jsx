@@ -9,27 +9,40 @@ const MapBackground = () => {
   const ASCII_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const pixelSize = 30;
   const headerHeight = 80;
-  const mazeWidth = 100; // 미로의 너비 (셀 단위)
-  const mazeHeight = 100; // 미로의 높이 (셀 단위)
-  const wallThickness = 2; // 벽 두께
-  const pathWidth = 2; // 통로 너비
+  const mazeWidth = 100;
+  const mazeHeight = 100;
 
-  // 미로 생성 함수 (재귀적 백트래킹, 두꺼운 벽/통로)
-  const generateMaze = (width, height, wallThick, pathWide) => {
+  // 미로 생성 함수 (긴 직선 복도)
+  const generateMaze = (width, height) => {
+    // 랜덤 통로 너비 (3~5)
+    const randomPathWidth = () => Math.floor(Math.random() * 3) + 3;
+
+    const gridSize = 6;
+    const gridWidth = Math.floor(width / gridSize);
+    const gridHeight = Math.floor(height / gridSize);
+
     // 미로 초기화 (모두 벽으로)
     const maze = Array(height)
       .fill(null)
       .map(() => Array(width).fill(1));
 
-    const cellSize = wallThick + pathWide; // 한 셀의 크기 (벽 + 통로)
-    const gridWidth = Math.floor(width / cellSize);
-    const gridHeight = Math.floor(height / cellSize);
+    // 각 그리드 셀의 통로 너비 저장
+    const cellData = Array(gridHeight)
+      .fill(null)
+      .map(() =>
+        Array(gridWidth)
+          .fill(null)
+          .map(() => ({
+            visited: false,
+            pathWidth: randomPathWidth(),
+          })),
+      );
 
     const directions = [
-      [0, -1], // 위
-      [1, 0], // 오른쪽
-      [0, 1], // 아래
-      [-1, 0], // 왼쪽
+      { dx: 0, dy: -1, name: "north" },
+      { dx: 1, dy: 0, name: "east" },
+      { dx: 0, dy: 1, name: "south" },
+      { dx: -1, dy: 0, name: "west" },
     ];
 
     const shuffle = (array) => {
@@ -40,72 +53,128 @@ const MapBackground = () => {
       return array;
     };
 
-    // 특정 그리드 위치에 통로 만들기 (pathWide x pathWide 크기)
-    const carvePath = (gridX, gridY) => {
-      const startX = gridX * cellSize + wallThick;
-      const startY = gridY * cellSize + wallThick;
+    // 통로만 파내기 (벽은 그대로)
+    const carvePath = (x, y, pathWidth) => {
+      const halfPath = Math.floor(pathWidth / 2);
 
-      for (let dy = 0; dy < pathWide; dy++) {
-        for (let dx = 0; dx < pathWide; dx++) {
-          const x = startX + dx;
-          const y = startY + dy;
-          if (x < width && y < height) {
-            maze[y][x] = 0;
+      for (let dy = -halfPath; dy < pathWidth - halfPath; dy++) {
+        for (let dx = -halfPath; dx < pathWidth - halfPath; dx++) {
+          const px = x + dx;
+          const py = y + dy;
+          if (px >= 0 && px < width && py >= 0 && py < height) {
+            maze[py][px] = 0;
           }
         }
       }
     };
 
-    // 두 셀 사이의 벽 제거 (연결 통로 만들기)
-    const carveConnection = (gridX1, gridY1, gridX2, gridY2) => {
-      if (gridX1 === gridX2) {
-        // 세로 연결
-        const x = gridX1 * cellSize + wallThick;
-        const startY =
-          Math.min(gridY1, gridY2) * cellSize + wallThick + pathWide;
-        const endY = startY + wallThick;
+    // 셀의 중심 좌표 계산
+    const getCellCenter = (gridX, gridY) => {
+      return {
+        x: gridX * gridSize + Math.floor(gridSize / 2),
+        y: gridY * gridSize + Math.floor(gridSize / 2),
+      };
+    };
 
-        for (let y = startY; y < endY; y++) {
-          for (let dx = 0; dx < pathWide; dx++) {
-            if (x + dx < width && y < height) {
-              maze[y][x + dx] = 0;
-            }
-          }
+    // 통로 그리기
+    const drawPath = (gridX, gridY) => {
+      const pathWidth = cellData[gridY][gridX].pathWidth;
+      const center = getCellCenter(gridX, gridY);
+      carvePath(center.x, center.y, pathWidth);
+    };
+
+    // 두 셀 사이의 복도 그리기
+    const drawCorridor = (gridX1, gridY1, gridX2, gridY2) => {
+      const pathWidth1 = cellData[gridY1][gridX1].pathWidth;
+      const pathWidth2 = cellData[gridY2][gridX2].pathWidth;
+
+      // 두 통로 중 작은 너비 사용 (일관성)
+      const corridorWidth = Math.min(pathWidth1, pathWidth2);
+
+      const center1 = getCellCenter(gridX1, gridY1);
+      const center2 = getCellCenter(gridX2, gridY2);
+
+      if (gridX1 === gridX2) {
+        // 세로 복도
+        const minY = Math.min(center1.y, center2.y);
+        const maxY = Math.max(center1.y, center2.y);
+
+        for (let y = minY; y <= maxY; y++) {
+          carvePath(center1.x, y, corridorWidth);
         }
       } else {
-        // 가로 연결
-        const y = gridY1 * cellSize + wallThick;
-        const startX =
-          Math.min(gridX1, gridX2) * cellSize + wallThick + pathWide;
-        const endX = startX + wallThick;
+        // 가로 복도
+        const minX = Math.min(center1.x, center2.x);
+        const maxX = Math.max(center1.x, center2.x);
 
-        for (let x = startX; x < endX; x++) {
-          for (let dy = 0; dy < pathWide; dy++) {
-            if (x < width && y + dy < height) {
-              maze[y + dy][x] = 0;
-            }
-          }
+        for (let x = minX; x <= maxX; x++) {
+          carvePath(x, center1.y, corridorWidth);
         }
       }
     };
 
-    const carve = (gridX, gridY) => {
-      carvePath(gridX, gridY);
+    // 같은 방향을 우선적으로 선택하는 함수
+    const biasedDirectionShuffle = (dirs, lastDirection) => {
+      if (!lastDirection) {
+        return shuffle([...dirs]);
+      }
 
-      const shuffledDirs = shuffle([...directions]);
+      const biasStrength = 0.7; // 70% 확률로 같은 방향 유지
 
-      for (const [dx, dy] of shuffledDirs) {
-        const nx = gridX + dx;
-        const ny = gridY + dy;
+      if (Math.random() < biasStrength) {
+        // 같은 방향을 맨 앞에 배치
+        const sameDirIndex = dirs.findIndex(
+          (d) => d.dx === lastDirection.dx && d.dy === lastDirection.dy,
+        );
 
-        if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
-          const checkX = nx * cellSize + wallThick;
-          const checkY = ny * cellSize + wallThick;
+        if (sameDirIndex !== -1) {
+          const sameDir = dirs[sameDirIndex];
+          const otherDirs = dirs.filter((_, i) => i !== sameDirIndex);
+          return [sameDir, ...shuffle(otherDirs)];
+        }
+      }
 
-          if (checkX < width && checkY < height && maze[checkY][checkX] === 1) {
-            carveConnection(gridX, gridY, nx, ny);
-            carve(nx, ny);
-          }
+      return shuffle([...dirs]);
+    };
+
+    const carve = (gridX, gridY, lastDirection = null, straightCount = 0) => {
+      cellData[gridY][gridX].visited = true;
+      drawPath(gridX, gridY);
+
+      const minStraightLength = 3; // 최소 직선 길이
+      const shouldContinueStraight =
+        straightCount < minStraightLength && lastDirection;
+
+      let orderedDirs;
+      if (shouldContinueStraight) {
+        // 최소 직선 길이를 채우기 위해 같은 방향 강제
+        orderedDirs = biasedDirectionShuffle(directions, lastDirection);
+      } else {
+        // 최소 길이를 채웠으면 방향 바이어스 적용
+        orderedDirs = biasedDirectionShuffle(directions, lastDirection);
+      }
+
+      for (const dir of orderedDirs) {
+        const nx = gridX + dir.dx;
+        const ny = gridY + dir.dy;
+
+        if (
+          nx >= 0 &&
+          nx < gridWidth &&
+          ny >= 0 &&
+          ny < gridHeight &&
+          !cellData[ny][nx].visited
+        ) {
+          drawCorridor(gridX, gridY, nx, ny);
+
+          // 같은 방향이면 카운트 증가, 다른 방향이면 리셋
+          const isSameDirection =
+            lastDirection &&
+            dir.dx === lastDirection.dx &&
+            dir.dy === lastDirection.dy;
+          const newCount = isSameDirection ? straightCount + 1 : 1;
+
+          carve(nx, ny, dir, newCount);
         }
       }
     };
@@ -123,7 +192,7 @@ const MapBackground = () => {
     const CHAR_SIZE = pixelSize;
 
     // 미로 생성
-    const maze = generateMaze(mazeWidth, mazeHeight, wallThickness, pathWidth);
+    const maze = generateMaze(mazeWidth, mazeHeight);
 
     // 캔버스 크기 설정
     const canvas = document.createElement("canvas");
@@ -144,12 +213,10 @@ const MapBackground = () => {
       for (let x = 0; x < mazeWidth; x++) {
         if (maze[y][x] === 1) {
           // 벽인 경우
-          // 랜덤한 ASCII 문자 선택
           const char =
             ASCII_CHARS[Math.floor(Math.random() * ASCII_CHARS.length)];
           ctx.fillText(char, (x + 0.5) * CHAR_SIZE, (y + 0.5) * CHAR_SIZE);
         }
-        // 빈 공간(0)은 그리지 않음 (투명)
       }
     }
 
@@ -191,14 +258,14 @@ const MapBackground = () => {
       uniforms: {
         uResolution: { value: [window.innerWidth, window.innerHeight] },
         uPixelSize: { value: pixelSize },
-        uColor1: { value: [0.878, 0.969, 0.98] }, // 배경색 (투명)
-        uColor2: { value: [0.431, 0.106, 0.082] }, // 벽 색상
+        uColor1: { value: [0.878, 0.969, 0.98] },
+        uColor2: { value: [0.431, 0.106, 0.082] },
         uMazeTexture: { value: null },
         uMazeSize: { value: [mazeWidth, mazeHeight] },
         uHeaderHeight: { value: headerHeight },
         uTime: { value: 0 },
         uSpeed: { value: 0.02 },
-        uTileScale: { value: 0.5 }, // 타일링 스케일 추가
+        uTileScale: { value: 1.0 },
       },
       vertexShader: `
         varying vec2 vUv;
