@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect } from "react";
 import StaticPaperBackground from "./StaticPaperBackground";
 import MapBackground from "./MapBackground";
+import MapBackground2 from "./MapBackground2";
 
 export default function CanvasBackground({ currentSection }) {
   useEffect(() => {
@@ -21,7 +22,7 @@ export default function CanvasBackground({ currentSection }) {
           {currentSection === "main" ||
           currentSection === "about" ||
           currentSection === "contact" ? (
-            <MapBackground />
+            <MapBackground2 />
           ) : null}
         </Canvas>
       </Suspense>
