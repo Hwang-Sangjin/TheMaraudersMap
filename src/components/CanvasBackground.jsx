@@ -22,7 +22,7 @@ export default function CanvasBackground({ currentSection }) {
           {currentSection === "main" ||
           currentSection === "about" ||
           currentSection === "contact" ? (
-            <MapBackground2 />
+            <MapBackground />
           ) : null}
         </Canvas>
       </Suspense>
