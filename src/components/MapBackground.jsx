@@ -5,51 +5,100 @@ import * as THREE from "three";
 const MapBackground = () => {
   const { viewport } = useThree();
 
-  const CHAR_SIZE = 8;
-  const COLS = 200;
-  const ROWS = 120;
+  const CHAR_SIZE = 12;
+  const COLS = 80;
+  const ROWS = 48;
 
   const createMaze = (cols, rows) => {
-    // Initialize all as walls
-    const maze = Array(rows)
-      .fill(null)
-      .map(() => Array(cols).fill("wall"));
+    const zoomFactor = 10;
+    const cellSpacing = 10; // 셀 간격 (미로 그리드 간격)
+    const pathWidth = 6; // 통로 너비 (1~cellSpacing 사이 값)
 
-    // Recursive backtracking maze generation
-    const carve = (x, y) => {
-      maze[y][x] = "path";
+    const fullCols = cols * zoomFactor;
+    const fullRows = rows * zoomFactor;
+    const fullMaze = Array(fullRows)
+      .fill(null)
+      .map(() => Array(fullCols).fill("wall"));
+
+    const stack = [];
+    const startX = cellSpacing;
+    const startY = cellSpacing;
+
+    // 시작점을 통로 너비만큼 넓게 설정
+    for (let dy = 0; dy < pathWidth; dy++) {
+      for (let dx = 0; dx < pathWidth; dx++) {
+        if (startY + dy < fullRows && startX + dx < fullCols) {
+          fullMaze[startY + dy][startX + dx] = "path";
+        }
+      }
+    }
+
+    stack.push([startX, startY]);
+
+    while (stack.length > 0) {
+      const [x, y] = stack[stack.length - 1];
 
       const directions = [
         [0, -1],
         [1, 0],
         [0, 1],
         [-1, 0],
-      ].sort(() => Math.random() - 0.5); // Shuffle
+      ].sort(() => Math.random() - 0.5);
+
+      let carved = false;
 
       for (const [dx, dy] of directions) {
-        const nx = x + dx * 3; // Move 3 cells at a time
-        const ny = y + dy * 3;
+        const nx = x + dx * cellSpacing;
+        const ny = y + dy * cellSpacing;
 
         if (
           nx > 0 &&
-          nx < cols - 1 &&
+          nx < fullCols - pathWidth &&
           ny > 0 &&
-          ny < rows - 1 &&
-          maze[ny][nx] === "wall"
+          ny < fullRows - pathWidth &&
+          fullMaze[ny][nx] === "wall"
         ) {
-          // Carve path between cells
-          for (let i = 1; i <= 3; i++) {
-            maze[y + dy * i][x + dx * i] = "path";
+          // 통로를 넓게 파기
+          for (let i = 0; i <= cellSpacing; i++) {
+            const currentX = x + dx * i;
+            const currentY = y + dy * i;
+
+            // pathWidth만큼 넓게 통로 생성
+            for (let pw = 0; pw < pathWidth; pw++) {
+              for (let ph = 0; ph < pathWidth; ph++) {
+                if (currentY + ph < fullRows && currentX + pw < fullCols) {
+                  fullMaze[currentY + ph][currentX + pw] = "path";
+                }
+              }
+            }
           }
-          carve(nx, ny);
+
+          stack.push([nx, ny]);
+          carved = true;
+          break;
         }
       }
-    };
 
-    // Start carving from position (3, 3)
-    carve(3, 3);
+      if (!carved) {
+        stack.pop();
+      }
+    }
 
-    return maze;
+    // 중앙 부분만 추출
+    const startCol = Math.floor((fullCols - cols) / 2);
+    const startRow = Math.floor((fullRows - rows) / 2);
+
+    const viewMaze = Array(rows)
+      .fill(null)
+      .map(() => Array(cols).fill("wall"));
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        viewMaze[row][col] = fullMaze[startRow + row][startCol + col];
+      }
+    }
+
+    return viewMaze;
   };
 
   const texture = useMemo(() => {
